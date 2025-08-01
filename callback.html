@@ -151,8 +151,13 @@
                     loadingSpinner.style.display = 'block';
                     debugSection.style.display = 'none'; // Hide debug section when button is clicked
 
-                    // Attempt to open the deep link
-                    window.location.href = deepLinkUrl;
+                    // NEW ROBUST DEEP LINK LAUNCH METHOD
+                    const a = document.createElement('a');
+                    a.href = deepLinkUrl;
+                    a.style.display = 'none'; // Hide the anchor tag
+                    document.body.appendChild(a);
+                    a.click(); // Programmatically click the anchor tag
+                    document.body.removeChild(a); // Clean up the element
 
                     // Fallback if the app doesn't open immediately (e.g., app not installed)
                     setTimeout(() => {
@@ -213,10 +218,9 @@
 
             // Universal Return to AppSheet button handler
             returnToAppsheetBtn.onclick = function() {
-                window.location.replace("https://www.appsheet.com/start/d/1lroAiI05FRT3m06gvxeNTsE8EXStcLL7DJnBIsAsDjE"); // IMPORTANT: Replace with your AppSheet App ID
+                window.location.replace("https://www.appsheet.com/start/1lroAiI05FRT3m06gvxeNTsE8EXStcLL7DJnBIsAsDjE"); // IMPORTANT: Replace with your AppSheet App ID
             };
         });
     </script>
 </body>
 </html>
-v
