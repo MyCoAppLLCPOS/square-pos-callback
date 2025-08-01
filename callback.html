@@ -2,11 +2,29 @@
 <html>
 <head>
     <meta charset="UTF-8">
-    <title>Square Payment Status</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Square Payment Action</title>
+    <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        body { font-family: Arial, sans-serif; text-align: center; margin-top: 50px; }
-        .success { color: green; font-weight: bold; }
-        .error { color: red; font-weight: bold; }
+        body {
+            font-family: "Inter", sans-serif;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background-color: #f3f4f6; /* Light gray background */
+            padding: 20px;
+        }
+        .container {
+            background-color: #ffffff;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            max-width: 400px;
+            width: 100%;
+            text-align: center;
+        }
         .spinner {
             border: 8px solid #f3f3f3; /* Light grey */
             border-top: 8px solid #3498db; /* Blue */
@@ -20,30 +38,107 @@
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
+        .success { color: #28a745; } /* Green */
+        .error { color: #dc3545; }   /* Red */
+        .info { color: #007bff; }    /* Blue */
     </style>
 </head>
 <body>
-    <div class="spinner"></div>
-    <h1>Processing Square Payment...</h1>
-    <p id="status-message">Please wait, we are securely updating your records.</p>
-    <p id="details-message"></p>
+    <div class="container">
+        <div id="loading-spinner" class="spinner"></div>
+        <h1 id="main-message" class="text-2xl font-bold mb-4 text-gray-800">Loading...</h1>
+        <p id="sub-message" class="text-gray-600 mb-6">Please wait while we prepare the payment options.</p>
+
+        <div id="action-buttons" class="hidden flex flex-col space-y-4">
+            <button id="open-square-btn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg shadow-md transition duration-300 ease-in-out transform hover:scale-105">
+                Open Square App
+            </button>
+            <button id="cancel-btn" class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-3 px-6 rounded-lg shadow-md transition duration-300 ease-in-out transform hover:scale-105">
+                Cancel
+            </button>
+        </div>
+
+        <div id="status-display" class="hidden mt-6">
+            <p id="status-message" class="text-lg font-semibold"></p>
+            <p id="details-message" class="text-sm text-gray-700 mt-2"></p>
+            <button id="return-to-appsheet-btn" class="hidden bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg shadow-md mt-4 transition duration-300 ease-in-out">
+                Return to AppSheet
+            </button>
+        </div>
+    </div>
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             const urlParams = new URLSearchParams(window.location.search);
-            const transactionId = urlParams.get('transaction_id');
-            const status = urlParams.get('status');
-            const paymentId = urlParams.get('payment_id');
-            const error = urlParams.get('error');
+            const deepLinkUrl = urlParams.get('deepLink'); // NEW: This line retrieves the deepLink parameter
+            const transactionId = urlParams.get('transaction_id'); // From Square callback
+            const status = urlParams.get('status');             // From Square callback
+            const paymentId = urlParams.get('payment_id');       // From Square callback
+            const error = urlParams.get('error');               // From Square callback
 
+            const loadingSpinner = document.getElementById('loading-spinner');
+            const mainMessage = document.getElementById('main-message');
+            const subMessage = document.getElementById('sub-message');
+            const actionButtons = document.getElementById('action-buttons');
+            const openSquareBtn = document.getElementById('open-square-btn');
+            const cancelBtn = document.getElementById('cancel-btn');
+            const statusDisplay = document.getElementById('status-display');
             const statusMessageDiv = document.getElementById('status-message');
             const detailsMessageDiv = document.getElementById('details-message');
-            const spinnerDiv = document.querySelector('.spinner');
+            const returnToAppsheetBtn = document.getElementById('return-to-appsheet-btn');
 
-            console.log('Client-side script received:', { transactionId, status, paymentId, error });
+            // Function to display status messages
+            function showStatus(type, message, details = '') {
+                loadingSpinner.style.display = 'none';
+                mainMessage.style.display = 'none';
+                subMessage.style.display = 'none';
+                actionButtons.style.display = 'none';
+                statusDisplay.style.display = 'block';
+                statusMessageDiv.className = type;
+                statusMessageDiv.innerText = message;
+                detailsMessageDiv.innerText = details;
+                returnToAppsheetBtn.style.display = 'block'; // Always show return button on final status
+            }
 
-            if (transactionId) {
+            // --- Logic for initial page load (from Apps Script) ---
+            if (deepLinkUrl) { // NEW: This conditional check is crucial
+                loadingSpinner.style.display = 'none';
+                mainMessage.innerText = 'Ready to Process Payment?';
+                subMessage.innerText = 'Click "Open Square App" to continue, or "Cancel".';
+                actionButtons.style.display = 'flex'; // Show buttons
+
+                openSquareBtn.onclick = function() {
+                    mainMessage.innerText = 'Opening Square App...';
+                    subMessage.innerText = 'Please wait, you will be redirected.';
+                    actionButtons.style.display = 'none';
+                    loadingSpinner.style.display = 'block'; // Show spinner again
+
+                    // Attempt to open the deep link
+                    window.location.href = deepLinkUrl; // Use window.location.href for deep links
+
+                    // Fallback if the app doesn't open immediately (e.g., app not installed)
+                    setTimeout(() => {
+                        if (document.visibilityState === 'visible') { // If user is still on this page
+                            showStatus('info', 'If Square App did not open, please ensure it is installed.', 'You can try again or cancel.');
+                        }
+                    }, 2000); // Wait 2 seconds
+                };
+
+                cancelBtn.onclick = function() {
+                    showStatus('error', 'Payment Process Canceled.', 'You chose not to proceed with the payment.');
+                    // Optionally, redirect back to AppSheet or a specific view
+                    // window.location.replace("your_appsheet_cancel_url_here");
+                };
+
+            } 
+            // --- Logic for Square POS App Callback (after payment) ---
+            else if (transactionId) {
+                mainMessage.innerText = 'Processing Square Payment...';
+                subMessage.innerText = 'Please wait, we are securely updating your records.';
+                loadingSpinner.style.display = 'block'; // Show spinner
+
                 // IMPORTANT: Replace this with your actual Google Apps Script Web App URL
+                // This is the *original* Apps Script that updates your Google Sheet
                 const appsScriptWebAppUrl = 'https://script.google.com/macros/s/AKfycbwgiInMDI8k9iLLFrPr6iYFTKzVlU8JAeZGzxTsljUq344Wwku4TGGhQpBzZHoQKroHHg/exec';
 
                 const payload = {
@@ -63,29 +158,29 @@
                 .then(response => response.json())
                 .then(data => {
                     console.log('Server-side update success:', data);
-                    spinnerDiv.style.display = 'none'; // Hide spinner on completion
                     if (data.success) {
-                        statusMessageDiv.className = 'success';
-                        statusMessageDiv.innerText = 'Payment Processed Successfully!';
-                        detailsMessageDiv.innerText = 'Transaction ID: ' + transactionId;
+                        showStatus('success', 'Payment Processed Successfully!', 'Transaction ID: ' + transactionId);
                     } else {
-                        statusMessageDiv.className = 'error';
-                        statusMessageDiv.innerText = 'Error processing payment: ' + data.message;
-                        detailsMessageDiv.innerText = 'Transaction ID: ' + transactionId;
+                        showStatus('error', 'Error processing payment: ' + data.message, 'Transaction ID: ' + transactionId);
                     }
                 })
                 .catch(err => {
                     console.error('Server-side update failed:', err);
-                    spinnerDiv.style.display = 'none'; // Hide spinner on error
-                    statusMessageDiv.className = 'error';
-                    statusMessageDiv.innerText = 'An error occurred during processing.';
-                    detailsMessageDiv.innerText = 'Transaction ID: ' + transactionId + ' Error: ' + err.message;
+                    showStatus('error', 'An error occurred during processing.', 'Transaction ID: ' + transactionId + ' Error: ' + err.message);
                 });
-            } else {
-                spinnerDiv.style.display = 'none'; // Hide spinner
-                statusMessageDiv.className = 'error';
-                statusMessageDiv.innerText = 'No transaction data received from Square.';
+            } 
+            // --- No parameters received (direct access or error) ---
+            else {
+                showStatus('info', 'No payment action initiated.', 'This page is for Square POS integration. Please initiate from your AppSheet app.');
             }
+
+            // Universal Return to AppSheet button handler
+            returnToAppsheetBtn.onclick = function() {
+                // Replace with your AppSheet app's deep link or a generic AppSheet URL
+                // e.g., "https://www.appsheet.com/start/YOUR_APP_ID"
+                // Or a specific view: "https://www.appsheet.com/start/YOUR_APP_ID#view=YourViewName"
+                window.location.replace("https://www.appsheet.com/start/d/1lroAiI05FRT3m06gvxeNTsE8EXStcLL7DJnBIsAsDjE"); // IMPORTANT: Replace with your AppSheet App ID
+            };
         });
     </script>
 </body>
