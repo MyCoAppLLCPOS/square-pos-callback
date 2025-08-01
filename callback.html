@@ -59,6 +59,24 @@
             font-family: monospace;
             resize: vertical;
         }
+         .direct-link-button {
+            display: inline-block;
+            background-color: #007bff; /* Blue */
+            color: white;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.2em;
+            cursor: pointer;
+            text-decoration: none; /* Remove underline from link */
+            transition: background-color 0.3s ease, transform 0.2s ease;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin-top: 20px;
+        }
+        .direct-link-button:hover {
+            background-color: #0056b3;
+            transform: translateY(-2px);
+        }
     </style>
 </head>
 <body>
@@ -92,6 +110,13 @@
         </div>
         <!--------------------------->
 
+        <!-- Direct Link Section (NEW) -->
+        <div id="direct-link-section" class="hidden mt-6">
+            <p class="text-gray-700">If the app did not open automatically, please click the button below:</p>
+            <a id="manual-open-link" href="#" class="direct-link-button">Click to Open Square App</a>
+        </div>
+        <!--------------------------->
+
     </div>
 
     <script>
@@ -113,6 +138,8 @@
             const statusMessageDiv = document.getElementById('status-message');
             const detailsMessageDiv = document.getElementById('details-message');
             const returnToAppsheetBtn = document.getElementById('return-to-appsheet-btn');
+            const manualOpenLink = document.getElementById('manual-open-link'); // NEW
+            const directLinkSection = document.getElementById('direct-link-section'); // NEW
 
             // Debugging elements
             const debugSection = document.getElementById('debug-section');
@@ -131,6 +158,7 @@
                 detailsMessageDiv.innerText = details;
                 returnToAppsheetBtn.style.display = 'block';
                 debugSection.style.display = 'none'; // Hide debug section when showing final status
+                directLinkSection.style.display = 'none'; // Hide direct link section on final status
             }
 
             // --- Logic for initial page load (from Apps Script) ---
@@ -145,24 +173,26 @@
                 debugDeepLinkTextarea.value = deepLinkUrl;
 
                 openSquareBtn.onclick = function() {
-                    mainMessage.innerText = 'Opening Square App...';
-                    subMessage.innerText = 'Please wait, you will be redirected.';
+                    mainMessage.innerText = 'Attempting to open Square App...';
+                    subMessage.innerText = 'If it does not open automatically, please click the link below.';
                     actionButtons.style.display = 'none';
                     loadingSpinner.style.display = 'block';
                     debugSection.style.display = 'none'; // Hide debug section when button is clicked
+                    directLinkSection.style.display = 'block'; // Show the direct link section
 
-                    // NEW ROBUST DEEP LINK LAUNCH METHOD
-                    const a = document.createElement('a');
-                    a.href = deepLinkUrl;
-                    a.style.display = 'none'; // Hide the anchor tag
-                    document.body.appendChild(a);
-                    a.click(); // Programmatically click the anchor tag
-                    document.body.removeChild(a); // Clean up the element
+                    // Set the href of the manual link
+                    manualOpenLink.href = deepLinkUrl;
 
-                    // Fallback if the app doesn't open immediately (e.g., app not installed)
+                    // Attempt automatic launch (though often blocked)
+                    window.location.href = deepLinkUrl; // Still try this first, as it's the most direct
+
+                    // Fallback to show status if app doesn't open immediately
                     setTimeout(() => {
                         if (document.visibilityState === 'visible') {
-                            showStatus('info', 'If Square App did not open, please ensure it is installed.', 'You can try again or cancel.');
+                            // If user is still on this page after a delay, it means the app didn't open.
+                            // The manual link is now visible for them to click.
+                            // We don't need to show a separate "If Square App did not open" message here,
+                            // as the directLinkSection already serves that purpose.
                         }
                     }, 2000);
                 };
@@ -178,6 +208,7 @@
                 subMessage.innerText = 'Please wait, we are securely updating your records.';
                 loadingSpinner.style.display = 'block';
                 debugSection.style.display = 'none'; // Hide debug section on callback
+                directLinkSection.style.display = 'none'; // Hide direct link section on callback
 
                 // IMPORTANT: Replace this with your actual Google Apps Script Web App URL
                 const appsScriptWebAppUrl = 'https://script.google.com/macros/s/AKfycbwgiInMDI8k9iLLFrPr6iYFTKzVlU8JAeZGzxTsljUq344Wwku4TGGhQpBzZHoQKroHHg/exec';
@@ -214,11 +245,12 @@
             else {
                 showStatus('info', 'No payment action initiated.', 'This page is for Square POS integration. Please initiate from your AppSheet app.');
                 debugSection.style.display = 'none'; // Hide debug section
+                directLinkSection.style.display = 'none'; // Hide direct link section
             }
 
             // Universal Return to AppSheet button handler
             returnToAppsheetBtn.onclick = function() {
-                window.location.replace("https://www.appsheet.com/start/1lroAiI05FRT3m06gvxeNTsE8EXStcLL7DJnBIsAsDjE"); // IMPORTANT: Replace with your AppSheet App ID
+                window.location.replace("https://www.appsheet.com/start/YOUR_APPSHEET_APP_ID_HERE"); // IMPORTANT: Replace with your AppSheet App ID
             };
         });
     </script>
