@@ -1,92 +1,59 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Payment Result</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        body {
-            font-family: sans-serif;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            background-color: #f3f4f6;
-            text-align: center;
-        }
-        .container {
-            background-color: #ffffff;
-            padding: 30px;
-            border-radius: 15px;
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
-            max-width: 400px;
-            width: 100%;
-        }
-        #status-title {
-            font-size: 24px;
-            font-weight: bold;
-            margin-bottom: 10px;
-        }
-        #status-message {
-            color: #4b5563;
-        }
-    </style>
-</head>
-<body>
+// ... (rest of your doGet function remains the same until htmlContent)
 
-    <div class="container">
-        <h1 id="status-title">Processing...</h1>
-        <p id="status-message">Please wait while we update the record in AppSheet.</p>
-    </div>
+  const htmlContent = "<!DOCTYPE html>" +
+    "<html>" +
+    "<head>" +
+    "    <meta charset=\"UTF-8\">" +
+    "    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">" +
+    "    <title>Launch Square App</title>" +
+    "    <style>" +
+    "        body {" +
+    "            font-family: sans-serif;" +
+    "            display: flex;" +
+    "            flex-direction: column;" +
+    "            justify-content: center;" +
+    "            align-items: center;" +
+    "            min-height: 100vh;" +
+    "            background-color: #f3f4f6;" +
+    "            text-align: center;" +
+    "            padding: 20px;" +
+    "        }" +
+    "        .container {" +
+    "            background-color: #ffffff;" +
+    "            padding: 30px;" +
+    "            border-radius: 15px;" +
+    "            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);" +
+    "            max-width: 400px;" +
+    "            width: 100%;" +
+    "        }" +
+    "        .launch-button {" +
+    "            display: inline-block;" +
+    "            background-color: #006aff;" +
+    "            color: white;" +
+    "            padding: 15px 30px;" +
+    "            border: none;" +
+    "            border-radius: 10px;" +
+    "            font-size: 1.2em;" +
+    "            text-decoration: none;" +
+    "            transition: background-color 0.3s ease, transform 0.2s ease;" +
+    "            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);" +
+    "            margin-top: 20px;" +
+    "        }" +
+    "        .launch-button:hover {" +
+    "            background-color: #0056b3;" +
+    "            transform: translateY(-2px);" +
+    "        }" +
+    "    </style>" +
+    "</head>" +
+    "<body>" +
+    "    <div class=\"container\">" +
+    "        <h1 class=\"text-2xl font-bold mb-4 text-gray-800\">Launch Square App</h1>" +
+    "        <p class=\"text-gray-600 mb-6\">Please click the button below to open the Square Point of Sale app.</p>" +
+    "        <a href=\"" + deepLinkToSquare + "\" class=\"launch-button\">Open Square App</a>" +
+    "    </div>" +
+    "</body>" +
+    "</html>";
 
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const urlParams = new URLSearchParams(window.location.search);
-            const data = {
-                transactionId: urlParams.get('transaction_id'),
-                status: urlParams.get('status'),
-                paymentId: urlParams.get('payment_id'),
-                error: urlParams.get('error_code') || urlParams.get('error_message')
-            };
-
-            const statusTitle = document.getElementById('status-title');
-            const statusMessage = document.getElementById('status-message');
-
-            if (data.status === 'success') {
-                statusTitle.innerText = "Payment Successful!";
-                statusTitle.style.color = '#10b981'; /* Green */
-                statusMessage.innerText = "The transaction has been completed. You can now close this page.";
-            } else if (data.status === 'error') {
-                statusTitle.innerText = "Payment Failed!";
-                statusTitle.style.color = '#ef4444'; /* Red */
-                statusMessage.innerText = "An error occurred: " + (data.error || "Unknown Error") + ". You can close this page.";
-            } else {
-                statusTitle.innerText = "Payment Canceled";
-                statusTitle.style.color = '#f59e0b'; /* Orange */
-                statusMessage.innerText = "The transaction was canceled. You can close this page.";
-            }
-
-            // *** IMPORTANT: REPLACE WITH YOUR APPS SCRIPT DEPLOYMENT URL ***
-            // This is the URL that receives the POST request from this page
-            const appsScriptUrl = "https://script.google.com/macros/s/AKfycbzdhq5Ydyryp384DRsmWrbvQUhng1PZWttqo_rLX2PbcS2Swfw9m7axgiYXRlbDvcd5oQ/exec";
-
-            // Send the data back to the Apps Script
-            fetch(appsScriptUrl, {
-                method: "POST",
-                body: JSON.stringify(data),
-                headers: {
-                    "Content-Type": "text/plain" // Required by Apps Script to parse POST data
-                }
-            })
-            .then(response => response.json())
-            .then(result => {
-                console.log('Apps Script response:', result);
-            })
-            .catch(error => {
-                console.error('Error sending data to Apps Script:', error);
-            });
-        });
-    </script>
-</body>
-</html>
+  return HtmlService.createHtmlOutput(htmlContent)
+    .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
+}
