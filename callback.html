@@ -1,92 +1,104 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Launching Square App...</title>
-    <style>
-        body {
-            font-family: sans-serif;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            text-align: center;
-            padding: 20px;
-            background-color: #f3f4f6;
-        }
-        .container {
-            background-color: #ffffff;
-            padding: 30px;
-            border-radius: 15px;
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
-            max-width: 400px;
-            width: 100%;
-        }
-        .spinner {
-            border: 8px solid #f3f3f3;
-            border-top: 8px solid #006aff; /* Square's blue color */
-            border-radius: 50%;
-            width: 60px;
-            height: 60px;
-            animation: spin 1s linear infinite;
-            margin: 20px auto;
-        }
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-        .launch-button {
-            display: inline-block;
-            background-color: #006aff;
-            color: white;
-            padding: 15px 30px;
-            border: none;
-            border-radius: 10px;
-            font-size: 1.2em;
-            text-decoration: none;
-            transition: background-color 0.3s ease, transform 0.2s ease;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            margin-top: 20px;
-        }
-        .launch-button:hover {
-            background-color: #0056b3;
-            transform: translateY(-2px);
-        }
-    </style>
-</head>
-<body>
-    <div class="container" id="container">
-        <div class="spinner"></div>
-        <h1 class="text-2xl font-bold mb-4 text-gray-800">Redirecting to Square App...</h1>
-        <p class="text-gray-600 mb-6">If the app does not open automatically, please click the button below.</p>
-        <a id="launch-link" href="#" class="launch-button">Open Square App</a>
-    </div>
+// ... (rest of your doGet function remains the same until htmlContent)
 
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const container = document.getElementById('container');
-            const urlParams = new URLSearchParams(window.location.search);
-            const deepLinkUrl = urlParams.get('deepLink');
-            const launchLink = document.getElementById('launch-link');
+  // Return HTML with the deep link and a copy button
+  const htmlContent = "<!DOCTYPE html>" +
+    "<html>" +
+    "<head>" +
+    "    <meta charset=\"UTF-8\">" +
+    "    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">" +
+    "    <title>Launching Square App...</title>" +
+    "    <script src=\"https://cdn.tailwindcss.com\"></script>" +
+    "    <style>" +
+    "        body {" +
+    "            font-family: \"Inter\", sans-serif;" +
+    "            display: flex;" +
+    "            flex-direction: column;" +
+    "            justify-content: center;" +
+    "            align-items: center;" +
+    "            min-height: 100vh;" +
+    "            background-color: #f3f4f6;" +
+    "            padding: 20px;" +
+    "            text-align: center;" +
+    "        }" +
+    "        .container {" +
+    "            background-color: #ffffff;" +
+    "            padding: 30px;" +
+    "            border-radius: 15px;" +
+    "            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);" +
+    "            max-width: 400px;" +
+    "            width: 100%;" +
+    "        }" +
+    "        .spinner {" +
+    "            border: 8px solid #f3f3f3;" +
+    "            border-top: 8px solid #006aff; /* Square's blue color */" +
+    "            border-radius: 50%;" +
+    "            width: 60px;" +
+    "            height: 60px;" +
+    "            animation: spin 1s linear infinite;" +
+    "            margin: 20px auto;" +
+    "        }" +
+    "        @keyframes spin {" +
+    "            0% { transform: rotate(0deg); }" +
+    "            100% { transform: rotate(360deg); }" +
+    "        }" +
+    "        .launch-button {" +
+    "            display: inline-block;" +
+    "            background-color: #006aff;" +
+    "            color: white;" +
+    "            padding: 15px 30px;" +
+    "            border: none;" +
+    "            border-radius: 10px;" +
+    "            font-size: 1.2em;" +
+    "            text-decoration: none;" +
+    "            transition: background-color 0.3s ease, transform 0.2s ease;" +
+    "            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);" +
+    "            margin-top: 20px;" +
+    "        }" +
+    "        .launch-button:hover {" +
+    "            background-color: #0056b3;" +
+    "            transform: translateY(-2px);" +
+    "        }" +
+    "    </style>" +
+    "</head>" +
+    "<body>" +
+    "    <div class=\"container\" id=\"container\">" +
+    "        <div class=\"spinner\"></div>" +
+    "        <h1 class=\"text-2xl font-bold mb-4 text-gray-800\">Redirecting to Square App...</h1>" +
+    "        <p class=\"text-gray-600 mb-6\">If the app does not open automatically, please click the button below.</p>" +
+    "        <a id=\"launch-link\" href=\"#\" class=\"launch-button\" style=\"display: none;\">Open Square App</a>" + // Initially hidden
+    "    </div>" +
+    "    <script>" +
+    "        document.addEventListener('DOMContentLoaded', function() {" +
+    "            const container = document.getElementById('container');" +
+    "            const urlParams = new URLSearchParams(window.location.search);" +
+    "            const deepLinkUrl = urlParams.get('deepLink');" +
+    "            const launchLink = document.getElementById('launch-link');" +
+    "            const spinner = container.querySelector('.spinner');" +
+    "            const mainTitle = container.querySelector('h1');" +
+    "            const subMessage = container.querySelector('p');" +
 
-            if (deepLinkUrl) {
-                launchLink.href = deepLinkUrl;
-                // Attempt to launch the deep link automatically
-                window.location.href = deepLinkUrl;
+    "            if (deepLinkUrl) {" +
+    "                launchLink.href = deepLinkUrl;" +
+    "                // Attempt to launch the deep link automatically" +
+    "                window.location.href = deepLinkUrl;" +
 
-                // Add a timeout to show the button if the automatic redirect fails
-                setTimeout(function() {
-                    container.querySelector('.spinner').style.display = 'none';
-                    container.querySelector('h1').innerText = 'Please tap to open the app.';
-                    container.querySelector('p').innerText = 'Your browser blocked the automatic redirect.';
-                    launchLink.style.display = 'block';
-                }, 2000); // Wait 2 seconds before showing the manual button
-            } else {
-                container.innerHTML = "<h1>Error: Deep Link Not Found</h1><p>The payment link is missing. Please try again from AppSheet.</p>";
-            }
-        });
-    </script>
-</body>
-</html>
+    "                // Add a timeout to show the button if the automatic redirect fails" +
+    "                setTimeout(function() {" +
+    "                    spinner.style.display = 'none';" +
+    "                    mainTitle.innerText = 'Please tap to open the app.'; " +
+    "                    subMessage.innerText = 'Your browser blocked the automatic redirect.'; " +
+    "                    launchLink.style.display = 'block'; // Show the manual button" +
+    "                }, 2000); // Wait 2 seconds before showing the manual button" +
+    "            } else {" +
+    "                spinner.style.display = 'none';" +
+    "                mainTitle.innerText = 'Error: Deep Link Not Found'; " +
+    "                subMessage.innerText = 'The payment link is missing. Please try again from AppSheet.'; " +
+    "            }" +
+    "        });" +
+    "    </script>" +
+    "</body>" +
+    "</html>";
+
+  return HtmlService.createHtmlOutput(htmlContent)
+    .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
+}
