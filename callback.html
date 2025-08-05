@@ -1,67 +1,98 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Payment Result</title>
-    <style>
-        body { font-family: sans-serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; background-color: #f3f4f6; text-align: center; }
-        .container { background-color: #ffffff; padding: 30px; border-radius: 15px; box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1); max-width: 400px; width: 100%; }
-        #status-title { font-size: 24px; font-weight: bold; margin-bottom: 10px; }
-        #status-message { color: #4b5563; }
-    </style>
-</head>
-<body>
+/**
+ * This function is triggered when the Apps Script Web App URL is accessed via GET.
+ * It receives payment parameters from AppSheet, constructs the Square deep link,
+ * and returns an HTML page that automatically redirects to the deep link.
+ */
+function doGet(e) {
+  Logger.log('doGet triggered with parameters: ' + JSON.stringify(e.parameter));
 
-    <div class="container">
-        <h1 id="status-title">Processing...</h1>
-        <p id="status-message">Please wait while we update the record in AppSheet.</p>
-    </div>
+  const rawTotalAmount = e.parameter.totalAmount;
+  const orderId = e.parameter.orderId;
+  let incomingSquareOrderId = e.parameter.squareOrderId;
+  const appSheetDeviceType = e.parameter.deviceType;
+  const appSheetHost = e.parameter.host;
 
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const urlParams = new URLSearchParams(window.location.search);
-            const data = {
-                transactionId: urlParams.get('transaction_id'),
-                status: urlParams.get('status'),
-                paymentId: urlParams.get('payment_id'),
-                error: urlParams.get('error_code') || urlParams.get('error_message')
-            };
+  let cleanedAmount = rawTotalAmount ? rawTotalAmount.replace('$', '') : '';
+  let totalAmount = parseFloat(cleanedAmount);
 
-            const statusTitle = document.getElementById('status-title');
-            const statusMessage = document.getElementById('status-message');
+  if (isNaN(totalAmount) || totalAmount <= 0) {
+    Logger.log('Invalid or zero TotalAmount received: ' + rawTotalAmount);
+    return HtmlService.createHtmlOutput("<h1>Error: Invalid Amount</h1><p>The payment amount is missing or invalid.</p>");
+  }
 
-            if (data.status === 'success') {
-                statusTitle.innerText = "Payment Successful!";
-                statusTitle.style.color = '#10b981';
-                statusMessage.innerText = "The transaction has been completed. You can now close this page.";
-            } else if (data.status === 'error') {
-                statusTitle.innerText = "Payment Failed!";
-                statusTitle.style.color = '#ef4444';
-                statusMessage.innerText = "An error occurred: " + (data.error || "Unknown Error") + ". You can close this page.";
-            } else {
-                statusTitle.innerText = "Payment Canceled";
-                statusTitle.style.color = '#f59e0b';
-                statusMessage.innerText = "The transaction was canceled. You can close this page.";
-            }
+  let finalSquareOrderId = incomingSquareOrderId;
+  if (!finalSquareOrderId || finalSquareOrderId.trim() === '') {
+    finalSquareOrderId = Utilities.getUuid();
+    Logger.log('Generated new SquareOrderID: ' + finalSquareOrderId);
+  }
 
-            const appsScriptUrl = "https://script.google.com/macros/s/AKfycbxsNnXh455Hl2SoI7A9eDmu8LrRVqFkSsuqhG9elQkSYSjFC_CtxHSyqoO1Jw8ozmtrtg/exec";
+  // *** USE THE APPLICATION ID FROM YOUR SQUARE DASHBOARD ***
+  const clientId = "sq0idp-huHHNGSTnULcDNNwqNTphtvA";
+  // *** USE THE GITHUB PAGES CALLBACK URL ***
+  const baseCallbackUrl = "https://mycoappllcpos.github.io/square-pos-callback/callback.html";
 
-            fetch(appsScriptUrl, {
-                method: "POST",
-                body: JSON.stringify(data),
-                headers: {
-                    "Content-Type": "text/plain"
-                }
-            })
-            .then(response => response.json())
-            .then(result => {
-                console.log('Apps Script response:', result);
-            })
-            .catch(error => {
-                console.error('Error sending data to Apps Script:', error);
-            });
-        });
-    </script>
-</body>
-</html>
+  let deepLinkToSquare = "";
+  let detectedOS = "";
+
+  if (appSheetDeviceType === "Android") {
+    detectedOS = "Android";
+  } else if (appSheetHost === "Device") {
+    detectedOS = "iOS";
+  }
+
+  if (detectedOS) {
+    const data = {
+      amount_money: {
+        amount: totalAmount * 100,
+        currency_code: "USD"
+      },
+      callback_url: baseCallbackUrl,
+      client_id: clientId,
+      transaction_id: finalSquareOrderId,
+      note: "Order #: " + orderId + " - AppSheet POS"
+    };
+    deepLinkToSquare = "square-commerce-v1://?data=" + encodeURIComponent(JSON.stringify(data));
+  } else {
+    Logger.log("Unsupported Device Type detected.");
+    return HtmlService.createHtmlOutput("<h1>Error: Unsupported Device Type</h1><p>Please use an Android or iOS device with the Square POS app installed.</p>");
+  }
+
+  Logger.log('Generated Deep Link to Square: ' + deepLinkToSquare);
+
+  // New HTML content with automatic redirect
+  const htmlContent = "<!DOCTYPE html>" +
+    "<html>" +
+    "<head>" +
+    "    <meta charset=\"UTF-8\">" +
+    "    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">" +
+    "    <title>Launching Square App</title>" +
+    "    <style>" +
+    "        body { font-family: sans-serif; display: flex; flex-direction: column; justify-content: center; align-items: center; min-height: 100vh; background-color: #f3f4f6; text-align: center; padding: 20px; }" +
+    "        .container { background-color: #ffffff; padding: 30px; border-radius: 15px; box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1); max-width: 400px; width: 100%; }" +
+    "        .loader { border: 4px solid #f3f3f3; border-top: 4px solid #006aff; border-radius: 50%; width: 40px; height: 40px; animation: spin 2s linear infinite; margin-top: 20px; }" +
+    "        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }" +
+    "    </style>" +
+    "</head>" +
+    "<body>" +
+    "    <div class=\"container\">" +
+    "        <h1>Launching Square App...</h1>" +
+    "        <p>If the app doesn't open automatically, please click the link below.</p>" +
+    "        <div class=\"loader\"></div>" +
+    "    </div>" +
+    "    <script>" +
+    "        window.location.href = '" + deepLinkToSquare + "';" +
+    "        // Fallback link in case the automatic redirect is blocked" +
+    "        setTimeout(function() {" +
+    "            document.querySelector('.container').innerHTML += '<a href=\"" + deepLinkToSquare + "\" style=\"color: #006aff; text-decoration: underline; margin-top: 15px; display: block;\">Click here to open Square App</a>';" +
+    "        }, 2000);" +
+    "    </script>" +
+    "</body>" +
+    "</html>";
+
+  return HtmlService.createHtmlOutput(htmlContent)
+    .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
+}
+
+function doPost(e) {
+  // Your doPost function code remains the same
+}
