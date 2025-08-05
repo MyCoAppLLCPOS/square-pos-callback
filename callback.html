@@ -18,53 +18,53 @@
         <p id="status-message">Please wait while we update the record in AppSheet.</p>
     </div>
 
+    <form id="apps-script-form" method="POST" style="display: none;">
+        <input type="hidden" name="transactionId" id="transactionId">
+        <input type="hidden" name="status" id="status">
+        <input type="hidden" name="paymentId" id="paymentId">
+        <input type="hidden" name="error" id="error">
+    </form>
+
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             const urlParams = new URLSearchParams(window.location.search);
-            const data = {
-                transactionId: urlParams.get('transaction_id'),
-                status: urlParams.get('status'),
-                paymentId: urlParams.get('payment_id'),
-                error: urlParams.get('error_code') || urlParams.get('error_message')
-            };
+            const transactionId = urlParams.get('transaction_id');
+            const status = urlParams.get('status');
+            const paymentId = urlParams.get('payment_id');
+            const error = urlParams.get('error_code') || urlParams.get('error_message');
 
             const statusTitle = document.getElementById('status-title');
             const statusMessage = document.getElementById('status-message');
 
-            if (data.status === 'success') {
+            if (status === 'success') {
                 statusTitle.innerText = "Payment Successful!";
                 statusTitle.style.color = '#10b981';
                 statusMessage.innerText = "The transaction has been completed. You can now close this page.";
-            } else if (data.status === 'error') {
+            } else if (status === 'error') {
                 statusTitle.innerText = "Payment Failed!";
                 statusTitle.style.color = '#ef4444';
-                statusMessage.innerText = "An error occurred: " + (data.error || "Unknown Error") + ". You can close this page.";
+                statusMessage.innerText = "An error occurred: " + (error || "Unknown Error") + ". You can close this page.";
             } else {
                 statusTitle.innerText = "Payment Canceled";
                 statusTitle.style.color = '#f59e0b';
-                statusMessage.innerText = "The transaction was canceled. You can close this page.";
+                statusMessage.innerText = "The transaction was canceled. You can now close this page.";
             }
 
+            // Fill the hidden form fields with the payment data
+            document.getElementById('transactionId').value = transactionId;
+            document.getElementById('status').value = status;
+            document.getElementById('paymentId').value = paymentId;
+            document.getElementById('error').value = error;
+            
+            // Set the form action URL
             // *** IMPORTANT: UPDATE THIS URL WITH YOUR CURRENT APPS SCRIPT DEPLOYMENT URL ***
-            const appsScriptUrl = "https://script.google.com/macros/s/AKfycbywkKs5D5NPFCXhydgHwgDmsppVG1IAm6cP-yANDz4I8pr4hxbtfYGZuK1eEYvSC1jo/exec";
+            const appsScriptUrl = "https://script.google.com/macros/s/AKfycbxsNnXh455Hl2SoI7A9eDmu8LrRVqFkSsuqhG9elQkSYSjFC_CtxHSyqoO1Jw8ozmtrtg/exec";
+            document.getElementById('apps-script-form').action = appsScriptUrl;
 
-            fetch(appsScriptUrl, {
-                method: "POST",
-                body: JSON.stringify(data),
-                headers: {
-                    "Content-Type": "text/plain"
-                }
-            })
-            .then(response => {
-                console.log('Apps Script raw response:', response);
-                return response.json();
-            })
-            .then(result => {
-                console.log('Apps Script JSON response:', result);
-            })
-            .catch(error => {
-                console.error('Error sending data to Apps Script:', error);
-            });
+            // Submit the form automatically after a short delay
+            setTimeout(function() {
+                document.getElementById('apps-script-form').submit();
+            }, 1000); // 1-second delay
         });
     </script>
 </body>
