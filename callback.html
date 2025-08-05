@@ -23,6 +23,7 @@
         <input type="hidden" name="status" id="status">
         <input type="hidden" name="paymentId" id="paymentId">
         <input type="hidden" name="error" id="error">
+        <input type="hidden" name="orderId" id="orderId">
     </form>
 
     <script>
@@ -32,6 +33,7 @@
             const status = urlParams.get('status');
             const paymentId = urlParams.get('payment_id');
             const error = urlParams.get('error_code') || urlParams.get('error_message');
+            const orderId = urlParams.get('orderId');
 
             const statusTitle = document.getElementById('status-title');
             const statusMessage = document.getElementById('status-message');
@@ -55,7 +57,8 @@
             document.getElementById('status').value = status;
             document.getElementById('paymentId').value = paymentId;
             document.getElementById('error').value = error;
-            
+            document.getElementById('orderId').value = orderId; 
+
             // Set the form action URL
             // *** IMPORTANT: UPDATE THIS URL WITH YOUR CURRENT APPS SCRIPT DEPLOYMENT URL ***
             const appsScriptUrl = "https://script.google.com/macros/s/AKfycbzlCa3FhtyJdxlz1lpG0isVqPzcp-MCTz9tldfcy66kJ4KhCHoGePdHWOdutPNSerdUrw/exec";
@@ -69,6 +72,3 @@
     </script>
 </body>
 </html>
-
-
-
