@@ -33,7 +33,15 @@
             const status = urlParams.get('status');
             const paymentId = urlParams.get('payment_id');
             const error = urlParams.get('error_code') || urlParams.get('error_message');
-            const orderId = urlParams.get('orderId'); // This line is crucial for canceled payments
+            const note = urlParams.get('note');
+            let orderId = null;
+
+            if (note) {
+              const orderIdMatch = note.match(/Order #: (.*?) - AppSheet POS/);
+              if (orderIdMatch && orderIdMatch.length > 1) {
+                orderId = orderIdMatch[1];
+              }
+            }
 
             const statusTitle = document.getElementById('status-title');
             const statusMessage = document.getElementById('status-message');
@@ -58,7 +66,7 @@
             document.getElementById('paymentId').value = paymentId;
             document.getElementById('error').value = error;
             document.getElementById('orderId').value = orderId; 
-            
+
             // Set the form action URL
             const appsScriptUrl = "https://script.google.com/macros/s/AKfycbzlCa3FhtyJdxlz1lpG0isVqPzcp-MCTz9tldfcy66kJ4KhCHoGePdHWOdutPNSerdUrw/exec";
             document.getElementById('apps-script-form').action = appsScriptUrl;
