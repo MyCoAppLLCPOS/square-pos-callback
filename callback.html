@@ -5,12 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Payment Result</title>
     <style>
-        body { font-family: sans-serif; display: flex; flex-direction: column; justify-content: center; align-items: center; min-height: 100vh; background-color: #f3f4f6; text-align: center; }
+        body { font-family: sans-serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; background-color: #f3f4f6; text-align: center; }
         .container { background-color: #ffffff; padding: 30px; border-radius: 15px; box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1); max-width: 400px; width: 100%; }
         #status-title { font-size: 24px; font-weight: bold; margin-bottom: 10px; }
         #status-message { color: #4b5563; }
-        .diagnostic-info { text-align: left; background-color: #f0f0f0; padding: 15px; border-radius: 8px; margin-top: 20px; font-size: 14px; }
-        .diagnostic-info h4 { margin-top: 0; }
     </style>
 </head>
 <body>
@@ -18,12 +16,6 @@
     <div class="container">
         <h1 id="status-title">Processing...</h1>
         <p id="status-message">Please wait while we update the record in AppSheet.</p>
-        <div class="diagnostic-info">
-            <h4>Diagnostic Info:</h4>
-            <p><strong>Order ID:</strong> <span id="display-order-id"></span></p>
-            <p><strong>Transaction ID:</strong> <span id="display-transaction-id"></span></p>
-            <p><strong>Status:</strong> <span id="display-status"></span></p>
-        </div>
     </div>
 
     <form id="apps-script-form" method="POST" style="display: none;">
@@ -31,25 +23,17 @@
         <input type="hidden" name="status" id="status">
         <input type="hidden" name="paymentId" id="paymentId">
         <input type="hidden" name="error" id="error">
-        <input type="hidden" name="orderId" id="orderId"> 
     </form>
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             const urlParams = new URLSearchParams(window.location.search);
-            const transactionId = urlParams.get('transaction_id');
+            
+            // This transactionId is returned for ALL payment outcomes (success, error, or cancelled)
+            const transactionId = urlParams.get('transaction_id'); 
             const status = urlParams.get('status');
             const paymentId = urlParams.get('payment_id');
             const error = urlParams.get('error_code') || urlParams.get('error_message');
-            const note = urlParams.get('note');
-            let orderId = null;
-
-            if (note) {
-              const orderIdMatch = note.match(/Order #: (.*?) - AppSheet POS/);
-              if (orderIdMatch && orderIdMatch.length > 1) {
-                orderId = orderIdMatch[1];
-              }
-            }
 
             const statusTitle = document.getElementById('status-title');
             const statusMessage = document.getElementById('status-message');
@@ -68,22 +52,19 @@
                 statusMessage.innerText = "The transaction was canceled. You can now close this page.";
             }
 
-            // Display diagnostic info on the page
-            document.getElementById('display-order-id').innerText = orderId || 'Not Found';
-            document.getElementById('display-transaction-id').innerText = transactionId || 'Not Found';
-            document.getElementById('display-status').innerText = status || 'Not Found';
-
-            // Fill the hidden form fields with the payment data
             document.getElementById('transactionId').value = transactionId;
             document.getElementById('status').value = status;
             document.getElementById('paymentId').value = paymentId;
             document.getElementById('error').value = error;
-            document.getElementById('orderId').value = orderId; 
+            
+            // Set the form action URL
+            const appsScriptUrl = "https://script.google.com/macros/s/AKfycbzlCa3FhtyJdxlz1lpG0isVqPzcp-MCTz9tldfcy66kJ4KhCHoGePdHWOdutPNSerdUrw/exec"; // Replace with your NEW Web App URL
+            document.getElementById('apps-script-form').action = appsScriptUrl;
 
             // Submit the form automatically after a short delay
             setTimeout(function() {
                 document.getElementById('apps-script-form').submit();
-            }, 5000); // 5-second delay to allow time for screenshot
+            }, 1000); 
         });
     </script>
 </body>
